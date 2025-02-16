@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 
 type OnAudioCallback = (audioData: Uint8Array) => void;
-type UseMicrophoneHook = () => {
+type UseMicrophoneHook = (args: { onAudio: OnAudioCallback }) => {
   loading: boolean;
   hasPermission: boolean;
   requestPermission: () => void;
-  startRecording: (onAudioCallback: OnAudioCallback) => void;
+  startRecording: () => void;
   stopRecording: () => void;
   isRecording: boolean;
 };
@@ -90,7 +90,7 @@ const checkMicrophonePermission = async () => {
   return hasPermission;
 };
 
-const useMicrophone: UseMicrophoneHook = () => {
+const useMicrophone: UseMicrophoneHook = ({ onAudio }) => {
   const [loading, setLoading] = useState(true);
   const [hasPermission, setHasPermission] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -113,14 +113,14 @@ const useMicrophone: UseMicrophoneHook = () => {
     }
   };
 
-  const startRecording = (cb: OnAudioCallback) => {
+  const startRecording = () => {
     if (!stream) return;
     if (recording) {
       console.error("startRecording - already have a recording in progress");
       return;
     }
     const rec = new Recording(stream);
-    rec.start(cb);
+    rec.start(onAudio);
     setRecording(rec);
   };
 

@@ -4,6 +4,7 @@ import { RealtimeTranscriber } from "assemblyai";
 type UseTranscriptionHook = () => {
   sendAudio: (audioData: Uint8Array) => void;
   transcript: string;
+  setTranscript: (t: string) => void;
   reset: () => void;
 };
 
@@ -78,6 +79,7 @@ const useTranscription: UseTranscriptionHook = () => {
     // @ts-expect-error shaddapa your moutha
     sendAudio: (data) => rt?.sendAudio(data),
     transcript,
+    setTranscript,
     reset,
   };
 };
