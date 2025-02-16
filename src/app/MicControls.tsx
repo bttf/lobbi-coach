@@ -1,6 +1,11 @@
 "use client";
+import Countdown from "@/app/Countdown";
 import useMicrophone from "@/app/useMicrophone";
+import usePrompting from "@/app/usePrompting";
 import useTranscription from "@/app/useTranscription";
+
+export const PROMPT_DELAY = 5000;
+
 export default function MicControls() {
   const {
     loading,
@@ -10,7 +15,15 @@ export default function MicControls() {
     startRecording,
     stopRecording,
   } = useMicrophone();
-  const { sendAudio, transcript } = useTranscription();
+  const { sendAudio, transcript, reset } = useTranscription();
+  const { answers, willPromptIn } = usePrompting({
+    prompt: transcript,
+    onPrompt: () => {
+      reset();
+    },
+    promptDelay: PROMPT_DELAY,
+  });
+  console.log("will prompt in...", willPromptIn);
   if (loading) return <>Loading...</>;
   return (
     <div className="flex flex-col gap-y-2">
@@ -27,6 +40,7 @@ export default function MicControls() {
             >
               Stop recording
             </button>
+            <button onClick={reset}>reset transcript</button>
           </div>
         ) : (
           <div className="flex items-center gap-x-4">
@@ -47,6 +61,8 @@ export default function MicControls() {
           Grant microphone permission
         </button>
       )}
+
+      <Countdown prompt={transcript} promptDelay={PROMPT_DELAY} />
 
       <div>{transcript}</div>
     </div>

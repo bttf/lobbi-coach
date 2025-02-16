@@ -10,11 +10,13 @@
   },
   "dependencies": {
     "assemblyai": "^4.9.0",
+    "lodash": "^4.17.21",
     "next": "15.1.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.15",
     "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/react": "^19",

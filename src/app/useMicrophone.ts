@@ -114,10 +114,6 @@ const useMicrophone: UseMicrophoneHook = () => {
   };
 
   const startRecording = (cb: OnAudioCallback) => {
-    console.log("debug startRecording", {
-      stream,
-      recording,
-    });
     if (!stream) return;
     if (recording) {
       console.error("startRecording - already have a recording in progress");
