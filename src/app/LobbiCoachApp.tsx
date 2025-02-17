@@ -29,14 +29,6 @@ export default function LobbiCoachApp() {
     promptDelay: PROMPT_DELAY,
   });
 
-  const unMute = () => {
-    connect();
-  };
-
-  const mute = () => {
-    disconnect();
-  };
-
   useEffect(() => {
     if (!connected) setAudioCallback(null);
     else setAudioCallback(sendAudio);
@@ -79,8 +71,8 @@ export default function LobbiCoachApp() {
           <MicrophoneButton
             loading={connecting}
             muted={!connected}
-            onMute={mute}
-            onUnmute={unMute}
+            onMute={disconnect}
+            onUnmute={connect}
           />
           <Button
             disabled={willPromptIn === -1}
