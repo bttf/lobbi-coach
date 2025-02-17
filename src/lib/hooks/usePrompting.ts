@@ -2,8 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 
 interface Answer {
   prompt: string;
-  response: string;
+  response?: string;
   createdAt: string;
+  loading: boolean;
 }
 
 type UsePromptingHook = (args: {
@@ -52,11 +53,29 @@ const usePrompting: UsePromptingHook = ({
     setAnswers((prev) => [
       ...prev,
       {
-        prompt: p,
-        response: "not sure",
         createdAt: new Date().toISOString(),
+        prompt: p,
+        loading: true,
       },
     ]);
+    fetch("/ask-coach", {
+      method: "POST",
+      body: JSON.stringify({ text: p }),
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        setAnswers((prev) => {
+          const last = prev.pop();
+          return [
+            ...prev,
+            {
+              ...(last as Answer),
+              response: res.message as string,
+              loading: false,
+            },
+          ];
+        });
+      });
     onPrompt();
   }, []);
 

@@ -38,11 +38,9 @@ const useTranscription: UseTranscriptionHook = () => {
   };
 
   const initTranscriber = async (token: string) => {
-    console.log("inting transcriber");
     rt = new RealtimeTranscriber({ token });
 
     rt.on("transcript", (message) => {
-      console.log("transcripting", message.text);
       texts[message.audio_start] = message.text;
       setTranscript(coalesceTextsIntoStr());
     });

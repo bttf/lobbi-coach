@@ -118,7 +118,6 @@ const useMicrophone: UseMicrophoneHook = ({ onAudio, onStart, onStop }) => {
   };
 
   const startRecording = () => {
-    console.log("startRecording", { stream });
     if (!stream) return;
     if (recording) {
       console.error("startRecording - already have a recording in progress");

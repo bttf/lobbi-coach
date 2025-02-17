@@ -1,5 +1,5 @@
 "use client";
-import { MicOffIcon, PauseIcon, PlayIcon } from "lucide-react";
+import { DotIcon, MicOffIcon, PauseIcon, PlayIcon } from "lucide-react";
 import useMicrophone from "@/lib/hooks/useMicrophone";
 import usePrompting from "@/lib/hooks/usePrompting";
 import useTranscription from "@/lib/hooks/useTranscription";
@@ -67,13 +67,17 @@ export default function LobbiCoachApp() {
   return (
     <div className="h-full relative">
       {/* main window */}
-      <div className="h-full pb-32 pt-4 flex flex-col px-4">
+      <div className="h-full pb-32 pt-4 flex flex-col px-4 overflow-y-scroll">
         {answers.map((a) => (
           <div key={a.createdAt} className="flex flex-col gap-y-2">
             <div className="ml-auto w-2/3 rounded-lg px-4 py-2 shadow bg-blue-400 text-white">
               {a.prompt}
             </div>
-            <div>{a.response}</div>
+            {a.loading ? (
+              <div className="italic text-sm">Thinking...</div>
+            ) : (
+              <div>{a.response}</div>
+            )}
           </div>
         ))}
       </div>
