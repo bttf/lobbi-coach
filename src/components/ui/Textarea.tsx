@@ -13,7 +13,7 @@ export default function Textarea({
   minRows,
 }: {
   value: string | null;
-  onChange: (val: string) => void;
+  onChange?: (val: string) => void;
   name?: string;
   className?: string;
   id?: string;
@@ -25,7 +25,7 @@ export default function Textarea({
   return (
     <TextareaAutosize
       value={value || ""}
-      onChange={(e) => onChange(e.currentTarget.value)}
+      onChange={(e) => onChange?.(e.currentTarget.value)}
       name={name}
       className={cn(
         "bg-transparent text-foreground px-2 py-1 border border-muted rounded-lg outline-none",

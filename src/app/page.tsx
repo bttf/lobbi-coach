@@ -1,5 +1,4 @@
 import LobbiCoachApp from "@/app/LobbiCoachApp";
-import { InfoIcon } from "lucide-react";
 export default function Home() {
   return (
     <div className="flex flex-col h-full">
@@ -13,7 +12,7 @@ export default function Home() {
             </div>
           </div>
           {/* TODO how-to modal */}
-          <InfoIcon className="w-6 h-6 text-gray-400" />
+          {/*<InfoIcon className="w-6 h-6 text-gray-400" />*/}
         </div>
       </div>
 

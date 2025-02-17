@@ -34,16 +34,11 @@ const usePrompting: UsePromptingHook = ({
   const togglePaused = () => setPaused(!paused);
 
   useEffect(() => {
-    console.log("usePrompting incoming prompt", {
-      _prompt,
-      prompt,
-    });
     if (_prompt === prompt) return;
     setPrompt(_prompt);
   }, [_prompt, prompt]);
 
   const submitPrompt = useCallback((p: string, onPrompt: () => void) => {
-    console.log("5 sec elapsed - submitting prompt");
     // TODO make request to LLM
     if (intervalHandler) {
       clearInterval(intervalHandler);
@@ -96,7 +91,6 @@ const usePrompting: UsePromptingHook = ({
   }, [prompt]);
 
   useEffect(() => {
-    console.log("paused", paused);
     if (!paused && prompt) {
       // restart timeouts
       setWillPromptIn(promptDelay);

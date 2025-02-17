@@ -1,18 +1,9 @@
 import { useEffect, useState } from "react";
 import { RealtimeTranscriber } from "assemblyai";
 
-type UseTranscriptionHook = () => {
-  loading: boolean;
-  sendAudio: (audioData: Uint8Array) => void;
-  transcript: string;
-  setTranscript: (t: string) => void;
-  reset: () => void;
-  startTranscribing: () => void;
-  stopTranscribing: () => void;
-};
-
 let rt: RealtimeTranscriber | null;
 let texts: Record<number, string> = {};
+let timeoutHandler: NodeJS.Timeout | null;
 
 const coalesceTextsIntoStr = () => {
   let msg = "";
@@ -29,9 +20,20 @@ const coalesceTextsIntoStr = () => {
   return msg;
 };
 
+type UseTranscriptionHook = () => {
+  sendAudio: (audioData: Uint8Array) => void;
+  transcript: string;
+  resetTranscript: () => void;
+  connect: () => void;
+  connecting: boolean;
+  disconnect: () => void;
+  connected: boolean;
+};
+
 const useTranscription: UseTranscriptionHook = () => {
-  const [loading, setLoading] = useState(false);
   const [transcript, setTranscript] = useState("");
+  const [connected, setConnected] = useState(false);
+  const [connecting, setConnecting] = useState(false);
 
   const fetchToken = async () => {
     const res = await fetch("/aai-token", { method: "POST" });
@@ -40,64 +42,77 @@ const useTranscription: UseTranscriptionHook = () => {
   };
 
   const initTranscriber = async (token: string) => {
-    rt = new RealtimeTranscriber({ token });
+    try {
+      rt = new RealtimeTranscriber({ token });
 
-    rt.on("transcript", (message) => {
-      texts[message.audio_start] = message.text;
-      setTranscript(coalesceTextsIntoStr());
-    });
+      rt.on("transcript", (message) => {
+        texts[message.audio_start] = message.text;
+        setTranscript(coalesceTextsIntoStr());
+      });
 
-    rt.on("error", async (error) => {
-      console.error(error);
-      await rt?.close();
-    });
+      rt.on("error", async (error) => {
+        console.error(error);
+        await rt?.close();
+      });
 
-    rt.on("close", (event) => {
-      console.log(event);
-      rt = null;
-    });
+      rt.on("close", (event) => {
+        console.log(event);
+        rt = null;
+      });
 
-    await rt.connect();
+      await rt.connect();
+
+      setConnected(true);
+    } catch (e) {
+      console.error("useTranscription - trouble connecting", e);
+      setConnected(false);
+    }
   };
 
-  const reset = () => {
+  const resetTranscript = () => {
     texts = {};
     setTranscript(coalesceTextsIntoStr());
   };
 
-  useEffect(() => {
-    fetchToken();
-  }, []);
-
-  const startTranscribing = async () => {
-    setLoading(true);
+  const connect = async () => {
+    setConnecting(true);
     const token = await fetchToken();
     await initTranscriber(token);
-    setLoading(false);
+    setConnecting(false);
   };
 
-  const stopTranscribing = async () => {
-    setLoading(true);
-    await rt?.close();
-    rt = null;
-    setLoading(false);
-  };
-
-  const sendAudio = (data: Uint8Array) => {
-    if (loading) return;
+  const disconnect = () => {
     if (!rt) return;
-    // @ts-expect-error shaddapa your moutha
+    rt.close();
+    rt = null;
+    setConnected(false);
+  };
+
+  const sendAudio = (data: Uint8Array<ArrayBufferLike>) => {
+    if (!rt) return;
+    // @ts-expect-error it works somehow
     rt.sendAudio(data);
   };
 
+  // close connection after 45 sec of inactivity
+  useEffect(() => {
+    if (timeoutHandler) clearTimeout(timeoutHandler);
+    if (!connected) timeoutHandler = null;
+    else {
+      timeoutHandler = setTimeout(() => {
+        disconnect();
+      }, 45 * 1000);
+    }
+  }, [connected, transcript]);
+
   return {
-    loading,
     sendAudio,
     transcript,
-    setTranscript,
-    reset,
-    startTranscribing,
-    stopTranscribing,
+    resetTranscript,
+    connect,
+    disconnect,
+    connecting,
+    connected,
   };
 };
 export default useTranscription;

@@ -1,18 +1,11 @@
 import { useEffect, useState } from "react";
 
-type OnAudioCallback = (audioData: Uint8Array) => void;
-type UseMicrophoneHook = (args: {
-  onAudio: OnAudioCallback;
-  onStart: () => void;
-  onStop: () => void;
-}) => {
-  loading: boolean;
-  hasPermission: boolean;
-  requestPermission: () => void;
-  startRecording: () => void;
-  stopRecording: () => void;
-  isRecording: boolean;
-};
+function mergeBuffers(lhs: Int16Array, rhs: Int16Array) {
+  const mergedBuffer = new Int16Array(lhs.length + rhs.length);
+  mergedBuffer.set(lhs, 0);
+  mergedBuffer.set(rhs, lhs.length);
+  return mergedBuffer;
+}
 
 class Recording {
   stream: MediaStream;
@@ -20,19 +13,13 @@ class Recording {
   audioWorkletNode?: AudioWorkletNode;
   source?: MediaStreamAudioSourceNode;
   audioBufferQueue = new Int16Array(0);
+  onAudioCallback: OnAudioCallback | null = null;
 
   constructor(stream: MediaStream) {
     this.stream = stream;
   }
 
-  mergeBuffers(lhs: Int16Array, rhs: Int16Array) {
-    const mergedBuffer = new Int16Array(lhs.length + rhs.length);
-    mergedBuffer.set(lhs, 0);
-    mergedBuffer.set(rhs, lhs.length);
-    return mergedBuffer;
-  }
-
-  async start(onAudioCallback: OnAudioCallback) {
+  async start() {
     this.audioContext = new AudioContext({
       sampleRate: 16_000,
       latencyHint: "balanced",
@@ -51,7 +38,7 @@ class Recording {
 
       const currentBuffer = new Int16Array(event.data.audio_data);
 
-      this.audioBufferQueue = this.mergeBuffers(
+      this.audioBufferQueue = mergeBuffers(
         this.audioBufferQueue,
         currentBuffer
       );
@@ -68,92 +55,59 @@ class Recording {
         );
 
         this.audioBufferQueue = this.audioBufferQueue.subarray(totalSamples);
-        if (onAudioCallback) onAudioCallback(finalBuffer);
+        if (this.onAudioCallback) this.onAudioCallback(finalBuffer);
       }
     };
   }
 
-  // stop() {
-  //   // this.stream.getTracks().forEach((track) => track.stop());
-  //   this.audioContext?.close();
-  //   this.audioBufferQueue = new Int16Array(0);
-  // }
+  setAudioCallback(onAudioCallback: OnAudioCallback | null) {
+    this.onAudioCallback = onAudioCallback;
+  }
 }
 
-const checkMicrophonePermission = async () => {
-  let hasPermission = false;
+type OnAudioCallback = (audioData: Uint8Array) => void;
 
-  try {
-    // @ts-expect-error 'microphone' is indeed a permission name bruv
-    const res = await navigator.permissions.query({ name: "microphone" });
-    hasPermission = res.state === "granted";
-  } catch (e) {
-    console.error("checkMicrophonePermission - an error occured", e);
-  }
-
-  return hasPermission;
+type UseMicrophoneHook = () => {
+  loading: boolean;
+  setAudioCallback: (cb: OnAudioCallback | null) => void;
 };
 
-const useMicrophone: UseMicrophoneHook = ({ onAudio, onStart, onStop }) => {
+const useMicrophone: UseMicrophoneHook = () => {
   const [loading, setLoading] = useState(true);
-  const [hasPermission, setHasPermission] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [recording, setRecording] = useState<Recording | null>(null);
 
-  const updatePermission = async () => {
-    setLoading(true);
-    const hasPerm = await checkMicrophonePermission();
-    setHasPermission(hasPerm);
-    setLoading(false);
-  };
-
-  const requestPermission = async () => {
+  // will ask user for mic permission if we dont already have
+  const getMicPermission = async () => {
     try {
+      setLoading(true);
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       setStream(stream);
-      updatePermission();
+      setLoading(false);
     } catch (e) {
-      console.error("requestPermission - not granted", e);
+      console.error("getMicPermission - an error occured", e);
     }
   };
 
-  const startRecording = () => {
-    if (!stream) return;
-    if (recording) {
-      console.error("startRecording - already have a recording in progress");
-      return;
-    }
-    const rec = new Recording(stream);
-    rec.start(onAudio);
-    setRecording(rec);
-    onStart();
-  };
-
-  const stopRecording = () => {
-    if (!recording) {
-      console.error("stopRecording - no recording in progress");
-      return;
-    }
-    // recording.stop();
-    setRecording(null);
-    onStop();
+  const setAudioCallback = (cb: OnAudioCallback | null) => {
+    if (!recording) return;
+    recording.setAudioCallback(cb);
   };
 
   useEffect(() => {
-    updatePermission();
+    getMicPermission();
   }, []);
 
   useEffect(() => {
-    if (hasPermission && !stream) requestPermission(); // set stream
-  }, [hasPermission, stream]);
+    if (!stream) return;
+    const rec = new Recording(stream);
+    rec.start();
+    setRecording(rec);
+  }, [stream]);
 
   return {
     loading,
-    hasPermission,
-    requestPermission,
-    startRecording,
-    stopRecording,
-    isRecording: !!recording,
+    setAudioCallback,
   };
 };
 

@@ -8,47 +8,33 @@ import MicPermissionModal from "@/components/MicPermissionModal";
 import MicrophoneButton from "@/components/MicrophoneButton";
 import Textarea from "@/components/ui/Textarea";
 import Countdown from "@/components/Countdown";
+import { useEffect } from "react";
 
 export const PROMPT_DELAY = 5000;
 
 export default function LobbiCoachApp() {
+  const { loading, setAudioCallback } = useMicrophone();
   const {
+    connect,
+    disconnect,
+    connecting,
+    connected,
+    resetTranscript,
     sendAudio,
     transcript,
-    reset,
-    setTranscript,
-    stopTranscribing,
-    startTranscribing,
-    loading: transcriberLoading,
   } = useTranscription();
-  const {
-    loading,
-    hasPermission,
-    requestPermission,
-    isRecording,
-    startRecording,
-    stopRecording,
-  } = useMicrophone({
-    onAudio: (data) => {
-      sendAudio(data);
-    },
-    onStart: () => startTranscribing(),
-    onStop: () => stopTranscribing(),
-  });
   const { answers, willPromptIn, togglePaused, isPaused } = usePrompting({
     prompt: transcript,
-    onPrompt: reset,
+    onPrompt: resetTranscript,
     promptDelay: PROMPT_DELAY,
   });
 
-  if (loading || !hasPermission)
-    return (
-      <>
-        {!hasPermission && (
-          <MicPermissionModal requestPermission={requestPermission} />
-        )}
-      </>
-    );
+  useEffect(() => {
+    if (!connected) setAudioCallback(null);
+    else setAudioCallback(sendAudio);
+  }, [connected, sendAudio, setAudioCallback]);
+
+  if (loading) return <MicPermissionModal />;
 
   return (
     <div className="h-full relative">
@@ -69,23 +55,24 @@ export default function LobbiCoachApp() {
       </div>
 
       {/* controls */}
-      <div className="absolute bottom-0 right-0 left-0 bg-muted">
+      <div className="absolute bottom-0 right-0 left-0 dark:bg-muted">
         <div className="px-4 absolute -top-6 left-0 right-0">
           <Countdown willPromptIn={willPromptIn} paused={isPaused} />
         </div>
-        <div className="px-4 my-4">
-          <Textarea
-            className="text-lg px-2 py-1 w-full text-sm bg-muted shadow resize-none"
-            value={transcript}
-            onChange={setTranscript}
-          />
-        </div>
+        {transcript && (
+          <div className="px-4 my-4">
+            <Textarea
+              className="text-lg px-2 py-1 w-full text-sm dark:bg-muted shadow-inner resize-none"
+              value={transcript}
+            />
+          </div>
+        )}
         <div className="flex justify-around px-4 my-4">
           <MicrophoneButton
-            loading={transcriberLoading}
-            muted={!isRecording}
-            onMute={stopRecording}
-            onUnmute={startRecording}
+            loading={connecting}
+            muted={!connected}
+            onMute={disconnect}
+            onUnmute={connect}
           />
           <Button
             disabled={willPromptIn === -1}
