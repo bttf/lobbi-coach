@@ -1,5 +1,5 @@
 "use client";
-import { DotIcon, MicOffIcon, PauseIcon, PlayIcon } from "lucide-react";
+import { PauseIcon, PlayIcon } from "lucide-react";
 import useMicrophone from "@/lib/hooks/useMicrophone";
 import usePrompting from "@/lib/hooks/usePrompting";
 import useTranscription from "@/lib/hooks/useTranscription";
@@ -11,20 +11,6 @@ import Countdown from "@/components/Countdown";
 
 export const PROMPT_DELAY = 5000;
 
-const Skeleton = () => (
-  <div className="h-full relative animate-pulse">
-    {/* controls */}
-    <div className="absolute bottom-0 right-0 left-0 p-4 flex justify-around border-t rounded-t-lg">
-      <Button className="p-4 rounded-full">
-        <MicOffIcon className="w-12 h-12 text-gray-400" />
-      </Button>
-      <Button className="p-4 rounded-full">
-        <PauseIcon className="w-12 h-12 text-gray-400" />
-      </Button>
-    </div>
-  </div>
-);
-
 export default function LobbiCoachApp() {
   const {
     sendAudio,
@@ -33,6 +19,7 @@ export default function LobbiCoachApp() {
     setTranscript,
     stopTranscribing,
     startTranscribing,
+    loading: transcriberLoading,
   } = useTranscription();
   const {
     loading,
@@ -60,7 +47,6 @@ export default function LobbiCoachApp() {
         {!hasPermission && (
           <MicPermissionModal requestPermission={requestPermission} />
         )}
-        <Skeleton />
       </>
     );
 
@@ -83,26 +69,27 @@ export default function LobbiCoachApp() {
       </div>
 
       {/* controls */}
-      <div className="absolute bottom-0 right-0 left-0 border-t">
+      <div className="absolute bottom-0 right-0 left-0 bg-muted">
         <div className="px-4 absolute -top-6 left-0 right-0">
           <Countdown willPromptIn={willPromptIn} paused={isPaused} />
         </div>
         <div className="px-4 my-4">
           <Textarea
-            className="text-lg border px-2 py-1 w-full text-sm"
+            className="text-lg px-2 py-1 w-full text-sm bg-muted shadow resize-none"
             value={transcript}
             onChange={setTranscript}
           />
         </div>
         <div className="flex justify-around px-4 my-4">
           <MicrophoneButton
+            loading={transcriberLoading}
             muted={!isRecording}
             onMute={stopRecording}
             onUnmute={startRecording}
           />
           <Button
             disabled={willPromptIn === -1}
-            className="p-4 rounded-full"
+            className="p-4 rounded-full shadow-lg bg-muted"
             onClick={togglePaused}
           >
             {isPaused ? (

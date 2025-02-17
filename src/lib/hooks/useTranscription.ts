@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { RealtimeTranscriber } from "assemblyai";
 
 type UseTranscriptionHook = () => {
+  loading: boolean;
   sendAudio: (audioData: Uint8Array) => void;
   transcript: string;
   setTranscript: (t: string) => void;
@@ -29,6 +30,7 @@ const coalesceTextsIntoStr = () => {
 };
 
 const useTranscription: UseTranscriptionHook = () => {
+  const [loading, setLoading] = useState(false);
   const [transcript, setTranscript] = useState("");
 
   const fetchToken = async () => {
@@ -56,7 +58,6 @@ const useTranscription: UseTranscriptionHook = () => {
     });
 
     await rt.connect();
-    console.log("connected", rt);
   };
 
   const reset = () => {
@@ -69,20 +70,29 @@ const useTranscription: UseTranscriptionHook = () => {
   }, []);
 
   const startTranscribing = async () => {
+    setLoading(true);
     const token = await fetchToken();
     await initTranscriber(token);
+    setLoading(false);
   };
+
   const stopTranscribing = async () => {
-    console.log("closing transcriber", { rt });
+    setLoading(true);
     await rt?.close();
-    console.log("debug", rt);
     rt = null;
-    console.log("debug2", rt);
+    setLoading(false);
+  };
+
+  const sendAudio = (data: Uint8Array) => {
+    if (loading) return;
+    if (!rt) return;
+    // @ts-expect-error shaddapa your moutha
+    rt.sendAudio(data);
   };
 
   return {
-    // @ts-expect-error shaddapa your moutha
-    sendAudio: (data) => rt?.sendAudio(data),
+    loading,
+    sendAudio,
     transcript,
     setTranscript,
     reset,
