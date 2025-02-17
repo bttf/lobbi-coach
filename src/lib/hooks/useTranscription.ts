@@ -6,6 +6,8 @@ type UseTranscriptionHook = () => {
   transcript: string;
   setTranscript: (t: string) => void;
   reset: () => void;
+  startTranscribing: () => void;
+  stopTranscribing: () => void;
 };
 
 let rt: RealtimeTranscriber | null;
@@ -27,19 +29,20 @@ const coalesceTextsIntoStr = () => {
 };
 
 const useTranscription: UseTranscriptionHook = () => {
-  const [token, setToken] = useState("");
   const [transcript, setTranscript] = useState("");
 
   const fetchToken = async () => {
     const res = await fetch("/aai-token", { method: "POST" });
     const json = await res.json();
-    setToken(json.token);
+    return json.token;
   };
 
   const initTranscriber = async (token: string) => {
+    console.log("inting transcriber");
     rt = new RealtimeTranscriber({ token });
 
     rt.on("transcript", (message) => {
+      console.log("transcripting", message.text);
       texts[message.audio_start] = message.text;
       setTranscript(coalesceTextsIntoStr());
     });
@@ -55,6 +58,7 @@ const useTranscription: UseTranscriptionHook = () => {
     });
 
     await rt.connect();
+    console.log("connected", rt);
   };
 
   const reset = () => {
@@ -66,14 +70,17 @@ const useTranscription: UseTranscriptionHook = () => {
     fetchToken();
   }, []);
 
-  useEffect(() => {
-    if (!token) return;
-    initTranscriber(token);
-    return () => {
-      console.log("tearing down transcriber");
-      rt?.close();
-    };
-  }, [token]);
+  const startTranscribing = async () => {
+    const token = await fetchToken();
+    await initTranscriber(token);
+  };
+  const stopTranscribing = async () => {
+    console.log("closing transcriber", { rt });
+    await rt?.close();
+    console.log("debug", rt);
+    rt = null;
+    console.log("debug2", rt);
+  };
 
   return {
     // @ts-expect-error shaddapa your moutha
@@ -81,6 +88,8 @@ const useTranscription: UseTranscriptionHook = () => {
     transcript,
     setTranscript,
     reset,
+    startTranscribing,
+    stopTranscribing,
   };
 };
 export default useTranscription;

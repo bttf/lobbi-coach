@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 
 type OnAudioCallback = (audioData: Uint8Array) => void;
-type UseMicrophoneHook = (args: { onAudio: OnAudioCallback }) => {
+type UseMicrophoneHook = (args: {
+  onAudio: OnAudioCallback;
+  onStart: () => void;
+  onStop: () => void;
+}) => {
   loading: boolean;
   hasPermission: boolean;
   requestPermission: () => void;
@@ -69,11 +73,11 @@ class Recording {
     };
   }
 
-  stop() {
-    this.stream.getTracks().forEach((track) => track.stop());
-    this.audioContext?.close();
-    this.audioBufferQueue = new Int16Array(0);
-  }
+  // stop() {
+  //   // this.stream.getTracks().forEach((track) => track.stop());
+  //   this.audioContext?.close();
+  //   this.audioBufferQueue = new Int16Array(0);
+  // }
 }
 
 const checkMicrophonePermission = async () => {
@@ -90,7 +94,7 @@ const checkMicrophonePermission = async () => {
   return hasPermission;
 };
 
-const useMicrophone: UseMicrophoneHook = ({ onAudio }) => {
+const useMicrophone: UseMicrophoneHook = ({ onAudio, onStart, onStop }) => {
   const [loading, setLoading] = useState(true);
   const [hasPermission, setHasPermission] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -114,6 +118,7 @@ const useMicrophone: UseMicrophoneHook = ({ onAudio }) => {
   };
 
   const startRecording = () => {
+    console.log("startRecording", { stream });
     if (!stream) return;
     if (recording) {
       console.error("startRecording - already have a recording in progress");
@@ -122,6 +127,7 @@ const useMicrophone: UseMicrophoneHook = ({ onAudio }) => {
     const rec = new Recording(stream);
     rec.start(onAudio);
     setRecording(rec);
+    onStart();
   };
 
   const stopRecording = () => {
@@ -129,8 +135,9 @@ const useMicrophone: UseMicrophoneHook = ({ onAudio }) => {
       console.error("stopRecording - no recording in progress");
       return;
     }
-    recording.stop();
+    // recording.stop();
     setRecording(null);
+    onStop();
   };
 
   useEffect(() => {

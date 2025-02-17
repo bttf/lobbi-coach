@@ -26,7 +26,14 @@ const Skeleton = () => (
 );
 
 export default function LobbiCoachApp() {
-  const { sendAudio, transcript, reset, setTranscript } = useTranscription();
+  const {
+    sendAudio,
+    transcript,
+    reset,
+    setTranscript,
+    stopTranscribing,
+    startTranscribing,
+  } = useTranscription();
   const {
     loading,
     hasPermission,
@@ -35,7 +42,11 @@ export default function LobbiCoachApp() {
     startRecording,
     stopRecording,
   } = useMicrophone({
-    onAudio: (data) => sendAudio(data),
+    onAudio: (data) => {
+      sendAudio(data);
+    },
+    onStart: () => startTranscribing(),
+    onStop: () => stopTranscribing(),
   });
   const { answers, willPromptIn, togglePaused, isPaused } = usePrompting({
     prompt: transcript,
