@@ -63,16 +63,18 @@ export default function LobbiCoachApp() {
       </div>
 
       {/* controls */}
-      <div className="absolute bottom-0 right-0 left-0 bg-muted">
+      <div className="absolute bottom-0 right-0 left-0 dark:bg-muted">
         <div className="px-4 absolute -top-6 left-0 right-0">
           <Countdown willPromptIn={willPromptIn} paused={isPaused} />
         </div>
-        <div className="px-4 my-4">
-          <Textarea
-            className="text-lg px-2 py-1 w-full text-sm bg-muted shadow resize-none"
-            value={transcript}
-          />
-        </div>
+        {transcript && (
+          <div className="px-4 my-4">
+            <Textarea
+              className="text-lg px-2 py-1 w-full text-sm dark:bg-muted shadow-inner resize-none"
+              value={transcript}
+            />
+          </div>
+        )}
         <div className="flex justify-around px-4 my-4">
           <MicrophoneButton
             loading={connecting}

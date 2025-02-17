@@ -46,7 +46,6 @@ const useTranscription: UseTranscriptionHook = () => {
       rt = new RealtimeTranscriber({ token });
 
       rt.on("transcript", (message) => {
-        console.log("transcriptin", message.text);
         texts[message.audio_start] = message.text;
         setTranscript(coalesceTextsIntoStr());
       });
@@ -90,7 +89,6 @@ const useTranscription: UseTranscriptionHook = () => {
   };
 
   const sendAudio = (data: Uint8Array<ArrayBufferLike>) => {
-    console.log("recvng audio");
     if (!rt) return;
     // @ts-expect-error it works somehow
     rt.sendAudio(data);

@@ -13,7 +13,7 @@ class Recording {
   audioWorkletNode?: AudioWorkletNode;
   source?: MediaStreamAudioSourceNode;
   audioBufferQueue = new Int16Array(0);
-  _onAudioCallback: OnAudioCallback | null = null;
+  onAudioCallback: OnAudioCallback | null = null;
 
   constructor(stream: MediaStream) {
     this.stream = stream;
@@ -55,19 +55,13 @@ class Recording {
         );
 
         this.audioBufferQueue = this.audioBufferQueue.subarray(totalSamples);
-
-        this.onAudioCallback(finalBuffer);
+        if (this.onAudioCallback) this.onAudioCallback(finalBuffer);
       }
     };
   }
-  onAudioCallback(finalBuffer: Uint8Array<ArrayBuffer>) {
-    console.log("we being called in here this.onAudioCallback");
-    if (this._onAudioCallback) this._onAudioCallback(finalBuffer);
-  }
 
   setAudioCallback(onAudioCallback: OnAudioCallback | null) {
-    this._onAudioCallback = onAudioCallback;
-    console.log("setting audio callback", onAudioCallback, this);
+    this.onAudioCallback = onAudioCallback;
   }
 }
 
@@ -106,7 +100,9 @@ const useMicrophone: UseMicrophoneHook = () => {
 
   useEffect(() => {
     if (!stream) return;
-    setRecording(new Recording(stream));
+    const rec = new Recording(stream);
+    rec.start();
+    setRecording(rec);
   }, [stream]);
 
   return {
