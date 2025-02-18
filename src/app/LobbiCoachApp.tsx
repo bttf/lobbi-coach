@@ -7,6 +7,13 @@ import { useEffect } from "react";
 import Conversation from "@/components/Conversation";
 import MicControls from "@/components/MicControls";
 
+/** TODO
+ * - add supabase
+ * - add game search
+ * - select a game to see controls
+ * - persist selected game to DB
+ */
+
 export const PROMPT_DELAY = 5000;
 
 export default function LobbiCoachApp() {
