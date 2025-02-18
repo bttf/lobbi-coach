@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-interface Answer {
+export interface Answer {
   prompt: string;
   response?: string;
   createdAt: string;
@@ -39,7 +39,6 @@ const usePrompting: UsePromptingHook = ({
   }, [_prompt, prompt]);
 
   const submitPrompt = useCallback((p: string, onPrompt: () => void) => {
-    // TODO make request to LLM
     if (intervalHandler) {
       clearInterval(intervalHandler);
       intervalHandler = null;

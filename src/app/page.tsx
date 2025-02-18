@@ -1,7 +1,7 @@
 import LobbiCoachApp from "@/app/LobbiCoachApp";
 export default function Home() {
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0">
       {/* header */}
       <div className="p-4 shadow-lg flex-shrink-0">
         <div className="flex items-center justify-between">
@@ -17,7 +17,7 @@ export default function Home() {
       </div>
 
       {/* body */}
-      <div className="flex-1">
+      <div className="flex-1 min-h-0">
         <LobbiCoachApp />
       </div>
     </div>

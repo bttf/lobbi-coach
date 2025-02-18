@@ -9,6 +9,7 @@ import MicrophoneButton from "@/components/MicrophoneButton";
 import Textarea from "@/components/ui/Textarea";
 import Countdown from "@/components/Countdown";
 import { useEffect } from "react";
+import Conversation from "@/components/Conversation";
 
 export const PROMPT_DELAY = 5000;
 
@@ -39,28 +40,17 @@ export default function LobbiCoachApp() {
   return (
     <div className="h-full relative">
       {/* main window */}
-      <div className="h-full pb-32 pt-4 flex flex-col px-4 overflow-y-scroll">
-        {answers.map((a) => (
-          <div key={a.createdAt} className="flex flex-col gap-y-2">
-            <div className="ml-auto w-2/3 rounded-lg px-4 py-2 shadow bg-blue-400 text-white">
-              {a.prompt}
-            </div>
-            {a.loading ? (
-              <div className="italic text-sm">Thinking...</div>
-            ) : (
-              <div>{a.response}</div>
-            )}
-          </div>
-        ))}
-      </div>
+      <Conversation answers={answers} />
 
       {/* controls */}
-      <div className="absolute bottom-0 right-0 left-0 dark:bg-muted">
-        <div className="px-4 absolute -top-6 left-0 right-0">
-          <Countdown willPromptIn={willPromptIn} paused={isPaused} />
-        </div>
+      <div className="absolute bottom-0 right-0 left-0 bg-background dark:bg-muted">
+        {willPromptIn !== -1 && (
+          <div className="px-4 my-2">
+            <Countdown willPromptIn={willPromptIn} paused={isPaused} />
+          </div>
+        )}
         {transcript && (
-          <div className="px-4 my-4">
+          <div className="px-4 mb-4 mt-2">
             <Textarea
               className="text-lg px-2 py-1 w-full text-sm dark:bg-muted shadow-inner resize-none"
               value={transcript}
