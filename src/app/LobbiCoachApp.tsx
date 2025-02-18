@@ -10,6 +10,7 @@ import Textarea from "@/components/ui/Textarea";
 import Countdown from "@/components/Countdown";
 import { useEffect } from "react";
 import Conversation from "@/components/Conversation";
+import MicControls from "@/components/MicControls";
 
 export const PROMPT_DELAY = 5000;
 
@@ -57,25 +58,15 @@ export default function LobbiCoachApp() {
             />
           </div>
         )}
-        <div className="flex justify-around px-4 my-4">
-          <MicrophoneButton
-            loading={connecting}
-            muted={!connected}
-            onMute={disconnect}
-            onUnmute={connect}
-          />
-          <Button
-            disabled={willPromptIn === -1}
-            className="p-4 rounded-full shadow-lg bg-muted"
-            onClick={togglePaused}
-          >
-            {isPaused ? (
-              <PlayIcon className="w-12 h-12" />
-            ) : (
-              <PauseIcon className="w-12 h-12" />
-            )}
-          </Button>
-        </div>
+        <MicControls
+          loading={connecting}
+          muted={!connected}
+          onMute={disconnect}
+          onUnmute={connect}
+          canPause={willPromptIn !== -1}
+          togglePaused={togglePaused}
+          paused={isPaused}
+        />
       </div>
     </div>
   );
